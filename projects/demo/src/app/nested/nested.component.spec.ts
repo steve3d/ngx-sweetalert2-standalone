@@ -1,16 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { SwalComponent } from './swal.component';
+import { NestedComponent } from './nested.component';
 
-describe('SwalComponent', () => {
-  let component: SwalComponent;
-  let fixture: ComponentFixture<SwalComponent>;
+describe('NestedComponent', () => {
+  let component: NestedComponent;
+  let fixture: ComponentFixture<NestedComponent>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [SwalComponent]
+      imports: [NestedComponent]
     });
-    fixture = TestBed.createComponent(SwalComponent);
+    fixture = TestBed.createComponent(NestedComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

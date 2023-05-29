@@ -1,14 +1,11 @@
-import { SweetAlert2Module, Sweetalert2ModuleConfig } from './sweet-alert2.module';
 import { makeEnvironmentProviders } from '@angular/core';
-import { dismissOnDestroyToken, fireOnInitToken, swalProviderFnToken } from './tokens';
-import { provideSwalDefault } from './sweet-alert2-loader.service';
+import { dismissOnDestroyToken, fireOnInitToken, ProvideSwalOptions, swalProviderFnToken } from './tokens';
+import { provideSwalDefault } from './swal-default.provide';
 
-
-export const provideSweetAlert2 = (options: Sweetalert2ModuleConfig = {}) => {
+export const provideSweetAlert2 = (options?: ProvideSwalOptions) => {
   return makeEnvironmentProviders([
-    SweetAlert2Module,
-    {provide: swalProviderFnToken, useValue: options.provideSwal ?? provideSwalDefault},
-    {provide: fireOnInitToken, useValue: options.fireOnInit ?? false},
-    {provide: dismissOnDestroyToken, useValue: options.dismissOnDestroy ?? true}
-  ])
+    {provide: swalProviderFnToken, useValue: options?.provider ?? provideSwalDefault},
+    {provide: fireOnInitToken, useValue: options?.fireOnInit ?? false},
+    {provide: dismissOnDestroyToken, useValue: options?.dismissOnDestroy ?? true}
+  ]);
 }

@@ -15,14 +15,14 @@ import {
   SimpleChanges
 } from '@angular/core';
 import Swal, { SweetAlertOptions, SweetAlertResult } from 'sweetalert2';
-import { dismissOnDestroyToken, fireOnInitToken } from './tokens';
-import { SwalPortalDirective } from './swal-portal.component';
-import { SwalModule, SweetAlert2LoaderService } from './sweet-alert2-loader.service';
+import { dismissOnDestroyToken, fireOnInitToken, SwalModule, SwalProviderFn, swalProviderFnToken } from './tokens';
+import { SwalPortalDirective } from './swal-portal.directive';
 
 @Component({
   selector: 'swal',
   template: '',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true
 })
 export class SwalComponent implements OnInit, OnChanges, OnDestroy {
   @Input() title?: SweetAlertOptions['title'];
@@ -94,6 +94,32 @@ export class SwalComponent implements OnInit, OnChanges, OnDestroy {
   @Input() currentProgressStep?: SweetAlertOptions['currentProgressStep'];
   @Input() progressStepsDistance?: SweetAlertOptions['progressStepsDistance'];
   @Input() scrollbarPadding?: SweetAlertOptions['scrollbarPadding'];
+
+  /**
+   * Whether to fire the modal as soon as the <swal> component is created and initialized in the view.
+   * When left undefined (default), the value will be inherited from the module configuration, which is `false`.
+   *
+   * Example:
+   *     <swal *ngIf="error" [title]="error.title" [text]="error.text" icon="error" [swalFireOnInit]="true"></swal>
+   */
+  @Input()
+  public swalFireOnInit?: boolean;
+
+  /**
+   * Whether to dismiss the modal when the <swal> component is destroyed by Angular (for any reason) or not.
+   * When left undefined (default), the value will be inherited from the module configuration, which is `true`.
+   */
+  @Input()
+  public swalDismissOnDestroy?: boolean;
+
+  @Input()
+  public set swalVisible(visible: boolean) {
+    visible ? this.fire() : this.close();
+  }
+
+  public get swalVisible(): boolean {
+    return this.isCurrentlyShown;
+  }
 
   /**
    * Modal lifecycle hook. Synchronously runs before the modal is shown on screen.
@@ -191,36 +217,40 @@ export class SwalComponent implements OnInit, OnChanges, OnDestroy {
 
   @ContentChildren(SwalPortalDirective) private portalDirectives?: QueryList<SwalPortalDirective>
 
+  /**
+   * Is the SweetAlert2 modal represented by this component currently opened?
+   */
+  private isCurrentlyShown = false;
+
   private swal?: SwalModule;
 
   constructor(private environmentInjector: EnvironmentInjector,
               private applicationRef: ApplicationRef,
-              private loaderService: SweetAlert2LoaderService,
+              @Inject(swalProviderFnToken) private swalProvider: SwalProviderFn,
               @Inject(fireOnInitToken) private fireOnInit: boolean,
               @Inject(dismissOnDestroyToken) private dismissOnDestroy: boolean) {
   }
 
   ngOnInit(): void {
-    this.loaderService.preloadSweetAlertLibrary()
-      .then(m => this.swal = m);
+    this.swalProvider().then(m => this.swal = m);
 
-    if (this.fireOnInit) {
+    if (this.fireOnInit || this.swalFireOnInit) {
       this.fire();
     }
   }
 
   ngOnDestroy(): void {
-    if(this.dismissOnDestroy) {
+    if (this.dismissOnDestroy) {
       this.swal?.close();
     }
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    if(this.swal && this.swal.getPopup()) {
+    if (this.swal && this.swal.getPopup()) {
       const updatedOptions = Object.keys(changes)
         .reduce((acc, cur) => {
           // Only update parameters which can be updatable
-          if(this.swal?.isUpdatableParameter(cur)) {
+          if (this.swal?.isUpdatableParameter(cur)) {
             acc[cur] = changes[cur].currentValue;
           }
           return acc;
@@ -232,7 +262,7 @@ export class SwalComponent implements OnInit, OnChanges, OnDestroy {
 
 
   async fire(): Promise<SweetAlertResult> {
-    this.swal = await this.loaderService.swal;
+    this.swal = await this.swalProvider();
     const userOptions: SweetAlertOptions = this.swalOptions;
     let options: SweetAlertOptions = {
       ...userOptions,
@@ -258,6 +288,18 @@ export class SwalComponent implements OnInit, OnChanges, OnDestroy {
     else if (result.isDismissed) this.dismiss.emit(result.dismiss);
 
     return result;
+  }
+
+  /**
+   * Closes the modal, if opened.
+   *
+   * @param result The value that the modal will resolve with, triggering either (confirm), (deny) or (dismiss).
+   *               If the argument is not passed, it is (dismiss) that will emit an `undefined` reason.
+   *               {@see Swal.close}.
+   */
+  async close(result?: SweetAlertResult): Promise<void> {
+
+    this.swal?.close(result);
   }
 
   private get swalOptions(): SweetAlertOptions {

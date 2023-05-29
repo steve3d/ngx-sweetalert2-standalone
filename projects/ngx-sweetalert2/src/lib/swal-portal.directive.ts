@@ -1,15 +1,21 @@
 import {
   ApplicationRef,
   Component,
-  ComponentRef, createComponent,
+  ComponentRef,
+  createComponent,
   Directive,
   EnvironmentInjector,
-  Input, OnDestroy,
+  HostBinding,
+  Input,
+  OnChanges,
+  OnDestroy,
   OnInit,
+  SimpleChanges,
   TemplateRef
 } from '@angular/core';
 import { SweetAlertOptions } from 'sweetalert2';
-import { SwalModule } from './sweet-alert2-loader.service';
+import { NgTemplateOutlet } from '@angular/common';
+import { SwalModule } from './tokens';
 
 export type SwalPortalType =
   'title'
@@ -22,24 +28,22 @@ export type SwalPortalType =
   | 'footer';
 
 @Directive({
-  selector: 'ng-template[swalPortal]'
+  selector: 'ng-template[swalPortal]',
+  standalone: true
 })
-export class SwalPortalDirective implements OnInit, OnDestroy {
+export class SwalPortalDirective implements OnInit, OnDestroy, OnChanges {
   /**
    * portal的目标位置
    */
-  @Input() type: SwalPortalType = 'content';
+  @Input('swalPortal') type: SwalPortalType | '' = '';
 
-  /**
-   * portal 内容的方式, 只有几个button可以被replace, 其它无效
-   */
-  @Input() mode: 'replace' | 'append' = 'append';
+  @Input('class') klass?: string | string[] | Set<string> | { [klass: string]: any; };
 
   private componentRef?: ComponentRef<SwalPortalComponent>;
 
   constructor(public templateRef: TemplateRef<any>,
               private environmentInjector: EnvironmentInjector,
-              private applicationRef: ApplicationRef,) {
+              private applicationRef: ApplicationRef) {
   }
 
   ngOnInit(): void {
@@ -48,11 +52,19 @@ export class SwalPortalDirective implements OnInit, OnDestroy {
     });
 
     this.componentRef.setInput('template', this.templateRef);
+    this.componentRef.instance.klass = this.klass;
     this.applicationRef.attachView(this.componentRef.hostView);
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (this.componentRef && changes['klass']) {
+      this.componentRef.instance.klass = this.klass;
+    }
+  }
+
+
   ngOnDestroy() {
-    if(this.componentRef) {
+    if (this.componentRef) {
       this.applicationRef.detachView(this.componentRef.hostView);
       this.componentRef.destroy();
     }
@@ -63,6 +75,7 @@ export class SwalPortalDirective implements OnInit, OnDestroy {
       case 'title':
         return {title: ' '};
       case 'content':
+      case '':
         return {html: ' '};
       case 'confirmButton':
         return {showConfirmButton: true};
@@ -105,23 +118,16 @@ export class SwalPortalDirective implements OnInit, OnDestroy {
   injectView(swal: SwalModule) {
     const targetEl = this.getTarget(swal);
 
-    if(targetEl && this.mode === 'replace') {
-      // 只有这几个button可以被replace, 其它replace无效
-      switch (this.type) {
-        case 'confirmButton':
-        case 'closeButton':
-        case 'denyButton':
-        case 'cancelButton':
-          targetEl.innerHTML = '';
-          break;
+    if (targetEl && this.componentRef) {
+      //=> Replace target's contents with our component
+      // https://jsperf.com/innerhtml-vs-removechild/15
+      while (targetEl.firstChild) {
+        targetEl.removeChild(targetEl.firstChild);
       }
-    }
 
-    if(targetEl && this.componentRef) {
       targetEl.appendChild(this.componentRef.location.nativeElement);
     }
   }
-
 }
 
 
@@ -131,8 +137,14 @@ export class SwalPortalDirective implements OnInit, OnDestroy {
  */
 @Component({
   selector: 'swal-portal',
-  template: '<ng-container [ngTemplateOutlet]="template"></ng-container>'
+  template: '<ng-container [ngTemplateOutlet]="template"></ng-container>',
+  standalone: true,
+  imports: [
+    NgTemplateOutlet
+  ]
 })
 export class SwalPortalComponent {
   @Input() template!: TemplateRef<any>;
+
+  @HostBinding('class') klass?: string | string[] | Set<string> | { [klass: string]: any; };
 }

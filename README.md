@@ -1,27 +1,282 @@
-# NgxSweetalert
+<p align="center">
+  <a href="https://sweetalert2.github.io">
+    <img src="ngx-sweetalert2-logo.png" alt="SweetAlert2">
+  </a>
+</p>
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 16.0.3.
+<h1 align="center">@sweetalert2/ngx-sweetalert2</h1>
 
-## Development server
+<p align="center">
+  <strong>Non</strong>-Official <a href="https://sweetalert2.github.io">SweetAlert2</a> integration for Angular
+</p>
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+<p align="center">
+    <a href="https://www.npmjs.com/package/@sweetalert2/ngx-sweetalert2"><img alt="npm version" src="https://img.shields.io/npm/v/@sweetalert2/ngx-sweetalert2.svg?style=flat-square"></a>
+    <a href="https://github.com/sweetalert2/ngx-sweetalert2/actions"><img alt="Build Status" src="https://github.com/sweetalert2/ngx-sweetalert2/workflows/build/badge.svg"></a>
+    <a href="LICENSE"><img alt="license" src="https://img.shields.io/github/license/sweetalert2/ngx-sweetalert2.svg?style=flat-square"></a>
+</p>
 
-## Code scaffolding
+<br>
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+This is not a regular API wrapper for SweetAlert (which already works very well alone), it intends to provide Angular-esque utilities on top of it.
 
-## Build
+:point_right: **Before posting an issue**, please check that the problem isn't on SweetAlert's side.
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+----------------
 
-## Running unit tests
+### Quick start
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+ - [Installation & Usage](#package-installation--usage)
+ - [`[swal]` directive](#swaldirective) — for simple, one-liner dialogs
+ - [`<swal>` component](#swalcomponent) — for advanced use cases and extended Swal2 API coverage
+ - [`[swalPortal]` directive](#swalportaldirective) — use Angular templates in `<swal>`
 
-## Running end-to-end tests
+### Wiki recipes
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+ - 🔌 [All possible ways of firing a modal and controlling its visibility](https://github.com/sweetalert2/ngx-sweetalert2/wiki/All-possible-ways-of-firing-a-modal-and-controlling-its-visibility)
+ - :wrench: [Setting global defaults (SweetAlert2 mixins)](https://github.com/sweetalert2/ngx-sweetalert2/wiki/Setting-global-defaults-(SweetAlert2-mixins))
+ - :art: [Use a theme from @sweetalert2/themes (and or customize SCSS variables)
+](https://github.com/sweetalert2/ngx-sweetalert2/wiki/Use-a-theme-from-@sweetalert2-themes-(and-or-customize-SCSS-variables))
 
-## Further help
+----------------
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+## :package: Installation & Usage
+
+1) Install _ngx-sweetalert2_ and _sweetalert2_ via the npm registry:
+
+```sh
+npm install sweetalert2 @vrdd/ngx-sweetalert2
+```
+
+:arrow_double_up: Always upgrade SweetAlert2 when you upgrade ngx-sweetalert2. The latter is statically linked with SweetAlert2's type definitions.
+
+## Angular and SweetAlert2 versions compatibility table
+
+| Angular version | Latest compatible version range                  | Required SweetAlert2 version range |
+|-----------------|--------------------------------------------------|------------------------------------|
+| Angular 16+     | @vrdd/ngx-sweetalert2@**^12.2.0** (current)      | sweetalert2@**^11.0.0**            |
+| Angular <16     | use old @sweetalert2/ngx-sweetalert2@**^12.0.0** | sweetalert2@**^11.0.0**            |
+
+2) Import the module:
+
+```typescript
+import { SweetAlert2Module } from '@sweetalert2/ngx-sweetalert2';
+
+@NgModule({
+    //=> Basic usage (forRoot can also take options, see the wiki)
+    imports: [SweetAlert2Module.forRoot()],
+
+    //=> In submodules only:
+    imports: [SweetAlert2Module],
+
+    //=> In submodules only, overriding options from your root module:
+    imports: [SweetAlert2Module.forChild({ /* options */ })]
+})
+export class AppModule {
+}
+```
+
+or provide it
+```typescript
+bootstrapApplication(AppComponent, {
+  providers: [
+    ... // others
+    provideSweetAlert2()
+  ]
+})
+  .catch(err => console.error(err));
+
+```
+
+That's it! By default, SweetAlert2 will be lazy-loaded, only when needed, from your local dependency of `sweetalert2`, using the `import()` syntax under the hood.
+
+## :link: API
+
+### `SwalDirective`
+
+Add the `[swal]` attribute to an element to show a simple modal when that element is clicked.
+
+To define the modal contents, you can pass a [`SweetAlertOptions` (provided by sweetalert2)](https://github.com/sweetalert2/sweetalert2/blob/main/sweetalert2.d.ts) object,
+or a simple array of strings, of format `[title: string, text: string (, icon: string)]`.
+
+A simple dialog:
+
+```html
+<button [swal]="['Oops!', 'This is not implemented yet :/', 'warning']">
+  Do it!
+</button>
+```
+
+More advanced, with text input, confirmation, denial and dismissal handling:
+
+```html
+<button
+  [swal]="{ title: 'Save file as...', input: 'text', showDenyButton: true, denyButtonText: 'Don\'t save', showCancelButton: true }"
+  (confirm)="saveFile($event)"
+  (deny)="handleDenial()"
+  (dismiss)="handleDismiss($event)">
+
+  Save
+</button>
+```
+
+```typescript
+export class MyComponent {
+  public saveFile(fileName: string): void {
+    // ... save file
+  }
+
+  public handleDenial(): void {
+      // ... don't save file and quit
+  }
+
+  public handleDismiss(dismissMethod: string): void {
+    // dismissMethod can be 'cancel', 'overlay', 'close', and 'timer'
+    // ... do something
+  }
+}
+```
+
+The directive can also take a reference to a [`<swal>` component](#swalcomponent) for more advanced use cases:
+
+```html
+<button [swal]="deleteSwal" (confirm)="deleteFile(file)">
+  Delete {{ file.name }}
+</button>
+
+<swal #deleteSwal title="Delete {{ file.name }}?" etc></swal>
+```
+
+### `SwalComponent`
+
+The library also provides a component, that can be useful for advanced use cases, or when you `[swal]`
+has too many options.
+
+The component also allows you to use Angular dynamic templates inside the SweetAlert (see the
+[`*swalPortal` directive](#swalportaldirective) for that).
+
+Simple example:
+
+```html
+<swal
+  #deleteSwal
+  title="Delete {{ file.name }}?"
+  text="This cannot be undone"
+  icon="question"
+  [showCancelButton]="true"
+  [focusCancel]="true"
+  (confirm)="deleteFile(file)">
+</swal>
+
+With [swal]:
+<button [swal]="deleteSwal">Delete {{ file.name }}</button>
+
+Or DIY:
+<button (click)="deleteSwal.fire()">Delete {{ file.name }}</button>
+```
+
+You can access the dialog from your TypeScript code-behind like this:
+
+```ts
+class MyComponent {
+  @ViewChild('deleteSwal')
+  public readonly deleteSwal!: SwalComponent;
+}
+```
+
+You can pass native SweetAlert2 options via the `swalOptions` input, just in the case you need that:
+
+```html
+<swal [swalOptions]="{ confirmButtonText: 'I understand' }"></swal>
+```
+
+By the way: every "special" option, like `swalOptions`, that are not native options from SweetAlert2,
+are prefixed with `swal`.
+
+You can catch other modal lifecycle events than (confirm), (deny) or (cancel):
+
+```html
+<swal
+  (willOpen)="swalWillOpen($event)"
+  (didOpen)="swalDidOpen($event)"
+  (didRender)="swalDidRender($event)"
+  (willClose)="swalWillClose($event)"
+  (didClose)="swalDidClose()"
+  (didDestroy)="swalDidDestroy()">
+</swal>
+```
+
+```typescript
+export class MyComponent {
+    public swalWillOpen(event: WillOpenEvent): void {
+      // Most events (those using $event in the example above) will let you access the modal native DOM node, like this:
+      console.log(event.modalElement);
+    }
+}
+```
+
+### `SwalPortalDirective`
+
+The `*swalPortal` structural directive lets you use Angular dynamic templates inside SweetAlerts.
+
+The name "portal" is inspired by React or Angular CDK portals.
+The directive will replace certain parts of the modal (aka. _swal targets_) with embedded Angular views.
+
+This allows you to have data binding, change detection, and use every feature of the Angular template syntax
+you want, just like if the SweetAlert was a normal Angular component (it's not at all).
+
+```html
+<swal title="SweetAlert2 Timer">
+  <ng-template swalPortal class="alert alert-info">
+    <strong>{{ elapsedSeconds }}</strong> seconds elapsed since the modal was opened.
+  </ng-template>
+</swal>
+```
+
+The portal targets can be specified with `swalPortal="title"` or other targets. The default mode for insert the portal content is append this template to the target, but can also replacing the target by adding `mode="replace"`. Note that replacing elements other than buttons has no effect, because there are nothing to replace the `content`. 
+
+In this example we set the main content of the modal, where the `text` property is usually rendered when SweetAlert2
+is in charge.
+You can also target the title, the footer, or even the confirm button, and more!
+
+You just have to change the _target_ of the portal (_`content`_ is the default target).
+Set the appropriate target as the value of `swalPortal`, here using two portals, the first one
+targeting the modal's content (this is the default), and the other one targeting the confirm button text.
+
+```html
+<swal title="Fill the form, rapidly" (confirm)="sendForm(myForm.value)">
+  <!-- This form will be displayed as the alert main content
+       Targets the alert's main content zone by default -->
+  <ng-template swalPortal>
+    <form [formControl]="myForm">
+      ...
+    </form>
+  </ng-template>
+
+
+  <!-- This targets the confirm button's inner content
+       Notice the usage of ng-container to avoid creating an useless DOM element inside the button -->
+  <ng-template swalPortal="confirmButton" mode="replace">
+    Send ({{ secondsLeft }} seconds left)
+  </ng-template>
+</swal>
+```
+
+We have the following targets: `closeButton`, `title`, `content`, `actions`, `confirmButton`, `cancelButton`, and `footer`.
+
+These targets are mostly provided by SweetAlert2 and made available in the right format for swal portals by
+this library, but you can also make your own if you need to (take inspiration from the original service source).
+Those are just variables containing a function that returns a modal DOM element, not magic.
+The magic is inside the directive ;)
+
+
+### Notes
+You can use `swalProviderFnToken` to customize the `sweetalert2`'s import, like add some mixin, or you can use `fileReplacements` to simply replace the no-css version of sweetalert2:
+```json
+"fileReplacements": [
+  {
+    "replace": "node_modules/sweetalert2/dist/sweetalert2.all.js",
+    "with": "node_modules/sweetalert2/dist/sweetalert2.js"
+  }
+],
+```

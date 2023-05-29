@@ -1,23 +1,40 @@
-import { Component, OnInit } from '@angular/core';
-import { interval } from 'rxjs';
+import { Component } from '@angular/core';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NgIf } from '@angular/common';
+import { SwalComponent, SwalDirective, SwalPortalDirective } from 'lib';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
+  standalone: true,
+  imports: [NgIf, RouterLink, RouterLinkActive, RouterOutlet, SwalDirective, SwalComponent, SwalPortalDirective]
 })
-export class AppComponent implements OnInit {
-  title = 'demo';
-  interval$ = interval(300);
+export class AppComponent {
+  public modalFireCondition = false;
 
-  constructor() {
+  public isSwalVisible = false;
 
+  private readonly dynamicTextChunks = 'This dynamic content is controlled by Angular'.split(' ');
+
+  private dynamicTextChunksIntervalHandle?: any;
+
+  private currentTextChunkOffset = 0;
+
+  public constructor() {
   }
 
-  ngOnInit(): void {
+  public get currentTextChunk(): string {
+    return this.dynamicTextChunks[this.currentTextChunkOffset % this.dynamicTextChunks.length];
   }
 
-  actions(action: string, $event: any) {
-    console.log(action, $event);
+  public startDynamicTextRotation(): void {
+    this.currentTextChunkOffset = 0;
+
+    this.dynamicTextChunksIntervalHandle = setInterval(() => this.currentTextChunkOffset++, 1000);
+  }
+
+  public stopDynamicTextRotation(): void {
+    clearInterval(this.dynamicTextChunksIntervalHandle);
   }
 }

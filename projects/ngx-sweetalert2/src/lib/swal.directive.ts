@@ -1,21 +1,21 @@
 import { Directive, EventEmitter, HostListener, Inject, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { SwalComponent } from './swal.component';
-import Swal, { SweetAlertOptions, SweetAlertResult } from 'sweetalert2';
-import { SweetAlert2LoaderService } from './sweet-alert2-loader.service';
-import { dismissOnDestroyToken, fireOnInitToken } from './tokens';
+import Swal, { SweetAlertArrayOptions, SweetAlertOptions, SweetAlertResult } from 'sweetalert2';
+import { dismissOnDestroyToken, fireOnInitToken, SwalProviderFn, swalProviderFnToken } from './tokens';
 
 @Directive({
-  selector: '[swal]'
+  selector: '[swal]',
+  standalone: true
 })
 export class SwalDirective implements OnInit, OnDestroy {
-  @Input() swal?: SwalComponent | SweetAlertOptions;
+  @Input() swal?: SwalComponent | SweetAlertOptions | SweetAlertArrayOptions;
 
   /**
    * Emits when the user clicks "Confirm".
    * The event value ($event) can be either:
    *  - by default, just `true`,
-   *  - when using {@link input}, the input value,
-   *  - when using {@link preConfirm}, the return value of this function.
+   *  - when using {@link swal.input}, the input value,
+   *  - when using {@link swal.preConfirm}, the return value of this function.
    *
    * Example:
    *     <swal (confirm)="handleConfirm($event)"></swal>
@@ -58,32 +58,41 @@ export class SwalDirective implements OnInit, OnDestroy {
   @Output()
   public readonly dismiss = new EventEmitter<Swal.DismissReason | undefined>();
 
-  constructor(private loaderService: SweetAlert2LoaderService,
+  constructor(@Inject(swalProviderFnToken) private swalProvider: SwalProviderFn,
               @Inject(fireOnInitToken) private fireOnInit: boolean,
               @Inject(dismissOnDestroyToken) private dismissOnDestroy: boolean) {
   }
 
   ngOnInit() {
-    this.loaderService.preloadSweetAlertLibrary();
+    this.swalProvider();
 
-    if(this.fireOnInit) {
+    if (this.fireOnInit) {
       this.clicked();
     }
   }
 
   ngOnDestroy() {
-    if(this.dismissOnDestroy) {
-      this.loaderService.swal.then(swal => swal.close());
+    if (this.dismissOnDestroy) {
+      this.swalProvider().then(swal => swal.close());
     }
   }
 
   @HostListener('click', ['$event'])
   async clicked(event?: PointerEvent) {
     if (this.swal) {
-      const swalModule = await this.loaderService.swal;
-      let result: SweetAlertResult = this.swal instanceof SwalComponent ?
-        await this.swal.fire() :
-        await swalModule.fire(this.swal as SweetAlertOptions);
+      const swalModule = await this.swalProvider();
+      let result: SweetAlertResult = {} as SweetAlertResult;
+      if (this.swal instanceof SwalComponent) {
+        result = await this.swal.fire();
+      } else if (Array.isArray(this.swal)) {
+        result = await swalModule.fire({
+          title: this.swal[0] ?? undefined,
+          text: this.swal[1] ?? undefined,
+          icon: this.swal[2] ?? undefined
+        });
+      } else if (this.swal) {
+        result = await swalModule.fire(this.swal as SweetAlertOptions);
+      }
 
       if (result.isConfirmed) this.confirm.emit(result.value);
       else if (result.isDenied) this.deny.emit();
