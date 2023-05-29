@@ -53,12 +53,6 @@
             "allowedCommonJsDependencies": [
               "sweetalert2"
             ],
-            "fileReplacements": [
-              {
-                "replace": "node_modules/sweetalert2/dist/sweetalert2.all.js",
-                "with": "node_modules/sweetalert2/dist/sweetalert2.js"
-              }
-            ],
             "outputPath": "dist/demo",
             "index": "projects/demo/src/index.html",
             "main": "projects/demo/src/main.ts",

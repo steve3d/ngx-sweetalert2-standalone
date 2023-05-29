@@ -3,11 +3,8 @@ import { NestedComponent } from './nested.component';
 import { dismissOnDestroyToken, swalProviderFnToken } from 'lib';
 
 export const provideSwal2 = () =>
-  import('sweetalert2').then(({ default: swal }) => swal.mixin({
-    backdrop: false,
-    customClass: {
-      title: 'title-custom',
-    }
+  import('sweetalert2/dist/sweetalert2.js').then(({ default: swal }) => swal.mixin({
+    backdrop: false
   }));
 
 export const nested: Routes =  [
