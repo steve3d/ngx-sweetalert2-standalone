@@ -31,11 +31,15 @@ type CssClasses = string | string[] | Set<string>;
   standalone: true
 })
 export class SwalPortalDirective implements OnInit, OnDestroy, OnChanges {
+
   /**
-   * portal的目标位置
+   * Portal template target
    */
   @Input('swalPortal') type: SwalPortalType | '' = '';
 
+  /**
+   * Additional class for the target
+   */
   @Input('class') klass?: CssClasses;
 
   private embeddedView?: EmbeddedViewRef<any>;
@@ -71,9 +75,6 @@ export class SwalPortalDirective implements OnInit, OnDestroy, OnChanges {
     switch (this.type) {
       case 'title':
         return {title: ' '};
-      case 'content':
-      case '':
-        return {html: ' '};
       case 'confirmButton':
         return {showConfirmButton: true};
       case 'cancelButton':
@@ -86,7 +87,8 @@ export class SwalPortalDirective implements OnInit, OnDestroy, OnChanges {
         return {footer: ' '};
     }
 
-    return {};
+    // any other option default to content
+    return {html: ' '};
   }
 
   injectView(swal: SwalModule) {
@@ -111,8 +113,6 @@ export class SwalPortalDirective implements OnInit, OnDestroy, OnChanges {
     switch (this.type) {
       case 'title':
         return swal.getTitle();
-      case 'content':
-        return swal.getHtmlContainer();
       case 'confirmButton':
         return swal.getConfirmButton();
       case 'cancelButton':
@@ -127,7 +127,8 @@ export class SwalPortalDirective implements OnInit, OnDestroy, OnChanges {
         return swal.getFooter();
     }
 
-    return null;
+    // any other option default to content
+    return swal.getHtmlContainer();
   }
 
   private setCssClass(el: HTMLElement, klass: CssClasses | undefined, action: 'add' | 'remove') {
