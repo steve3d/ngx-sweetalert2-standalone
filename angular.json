@@ -7,7 +7,7 @@
       "projectType": "library",
       "root": "projects/ngx-sweetalert2",
       "sourceRoot": "projects/ngx-sweetalert2/src",
-      "prefix": "lib",
+      "prefix": "swal",
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:ng-packagr",
@@ -31,6 +31,15 @@
             "polyfills": [
               "zone.js",
               "zone.js/testing"
+            ]
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "projects/ngx-sweetalert2/**/*.ts",
+              "projects/ngx-sweetalert2/**/*.html"
             ]
           }
         }
@@ -133,6 +142,15 @@
               "projects/demo/src/styles.scss"
             ],
             "scripts": []
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "projects/demo/**/*.ts",
+              "projects/demo/**/*.html"
+            ]
           }
         }
       }

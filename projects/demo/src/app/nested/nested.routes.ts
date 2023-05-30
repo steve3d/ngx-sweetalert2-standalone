@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 import { NestedComponent } from './nested.component';
-import { dismissOnDestroyToken, swalProviderFnToken } from 'lib';
+import { swalProviderFnToken } from 'lib';
 
 export const provideSwal2 = () =>
   import('sweetalert2/dist/sweetalert2.js').then(({ default: swal }) => swal.mixin({

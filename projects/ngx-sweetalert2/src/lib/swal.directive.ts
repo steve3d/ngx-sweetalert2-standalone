@@ -79,6 +79,10 @@ export class SwalDirective implements OnInit, OnDestroy {
 
   @HostListener('click', ['$event'])
   async clicked(event?: PointerEvent) {
+    event?.preventDefault();
+    event?.stopImmediatePropagation();
+    event?.stopPropagation();
+
     if (this.swal) {
       const swalModule = await this.swalProvider();
       let result: SweetAlertResult = {} as SweetAlertResult;

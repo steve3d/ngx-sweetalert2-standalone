@@ -1,16 +1,18 @@
 import { ModuleWithProviders, NgModule } from '@angular/core';
 import { SwalComponent } from './swal.component';
-import { SwalPortalDirective, SwalPortalComponent } from './swal-portal.directive';
+import { SwalPortalDirective } from './swal-portal.directive';
 import { SwalDirective } from './swal.directive';
 import { dismissOnDestroyToken, fireOnInitToken, ProvideSwalOptions, swalProviderFnToken } from './tokens';
 import { provideSwalDefault } from './swal-default.provide';
 
-
+/**
+ * @deprecated
+ * Use standalone version, and `provideSweetAlert2`
+ */
 @NgModule({
   imports: [
     SwalComponent,
     SwalPortalDirective,
-    SwalPortalComponent,
     SwalDirective
   ],
   exports: [
@@ -20,6 +22,11 @@ import { provideSwalDefault } from './swal-default.provide';
   ]
 })
 export class SweetAlert2Module {
+  /**
+   * @deprecated
+   * Use individual provide for `swalProviderFnToken`, `fireOnInitToken`, `dismissOnDestroyToken`.
+   * Or use `provideSweetAlert2`
+   */
   static forRoot(options?: ProvideSwalOptions): ModuleWithProviders<SweetAlert2Module> {
     return {
       ngModule: SweetAlert2Module,
@@ -33,7 +40,8 @@ export class SweetAlert2Module {
 
   /**
    * @deprecated
-   * Use individual provide for `swalProviderFnToken`, `fireOnInitToken`, `dismissOnDestroyToken`
+   * Use individual provide for `swalProviderFnToken`, `fireOnInitToken`, `dismissOnDestroyToken`.
+   * Or use `provideSweetAlert2`
    */
   static forChild(options?: ProvideSwalOptions): ModuleWithProviders<SweetAlert2Module> {
     return this.forRoot(options);
