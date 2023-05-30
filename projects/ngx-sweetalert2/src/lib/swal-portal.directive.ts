@@ -24,7 +24,9 @@ type SwalPortalType =
   | 'actions'
   | 'footer';
 
-type CssClasses = string | string[] | Set<string>;
+type CssClasses = string | string[];
+
+const WS_REGEXP = /\s+/;
 
 @Directive({
   selector: 'ng-template[swalPortal]',
@@ -44,7 +46,8 @@ export class SwalPortalDirective implements OnInit, OnDestroy, OnChanges {
 
   private embeddedView?: EmbeddedViewRef<any>;
   private targetEl: HTMLElement | null = null;
-  private oldKlass?: CssClasses;
+  private oldKlass?: string[];
+  private newKlass?: string[];
 
   constructor(public templateRef: TemplateRef<any>,
               private environmentInjector: EnvironmentInjector,
@@ -58,14 +61,16 @@ export class SwalPortalDirective implements OnInit, OnDestroy, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
-    // Keep the last classes, so we can remove it if it changes
-    if (changes['klass']?.previousValue) {
-      this.oldKlass = changes['klass'].previousValue;
+    // parse the class and keep the previous classes
+    if (changes.hasOwnProperty('klass')) {
+      this.oldKlass = this.parseClasses(changes['klass'].previousValue);
+      this.newKlass = this.parseClasses(changes['klass'].currentValue);
     }
   }
 
   ngOnDestroy() {
     if (this.embeddedView) {
+      // remove and destroy embedded view manually
       this.applicationRef.detachView(this.embeddedView);
       this.embeddedView.destroy();
     }
@@ -101,9 +106,14 @@ export class SwalPortalDirective implements OnInit, OnDestroy, OnChanges {
         this.targetEl.removeChild(this.targetEl.firstChild);
       }
 
-      // reflect the css class change
-      this.setCssClass(this.targetEl, this.oldKlass, 'remove');
-      this.setCssClass(this.targetEl, this.klass, 'add')
+      // reflect the css class change, remove old classes
+      if(this.oldKlass) {
+        this.targetEl.classList.remove(...this.oldKlass);
+      }
+      // add new classes
+      if(this.newKlass) {
+        this.targetEl.classList.add(...this.newKlass);
+      }
 
       this.embeddedView.rootNodes.forEach(n => this.targetEl?.appendChild(n));
     }
@@ -131,21 +141,18 @@ export class SwalPortalDirective implements OnInit, OnDestroy, OnChanges {
     return swal.getHtmlContainer();
   }
 
-  private setCssClass(el: HTMLElement, klass: CssClasses | undefined, action: 'add' | 'remove') {
-    if (klass) {
-      if (action === 'add') {
-        if (typeof klass === 'string') {
-          el.classList.add(klass);
-        } else {
-          el.classList.add(...klass);
-        }
+  private parseClasses(value: CssClasses | undefined): string[] | undefined {
+    if(value) {
+      if(typeof value === 'string') {
+        return value.trim().split(WS_REGEXP);
       } else {
-        if (typeof klass === 'string') {
-          el.classList.remove(klass);
-        } else {
-          el.classList.remove(...klass);
-        }
+        return value.reduce((acc, cur) => [
+          ...acc,
+          ...(cur.trim().split(WS_REGEXP)),
+        ], [] as string[])
       }
     }
+
+    return undefined;
   }
 }

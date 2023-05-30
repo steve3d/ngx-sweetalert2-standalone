@@ -65,8 +65,8 @@
 
 <swal #swalWithPortals (didOpen)="startDynamicTextRotation()" (didClose)="stopDynamicTextRotation()">
   <ng-template swalPortal="closeButton">{{ currentTextChunk }}</ng-template>
-  <ng-template swalPortal="title">{{ currentTextChunk }}</ng-template>
-  <ng-template swalPortal="content">{{ currentTextChunk }}</ng-template>
+  <ng-template swalPortal="title" class="c-a c-b">{{ currentTextChunk }}</ng-template>
+  <ng-template swalPortal="content" class="class-a class-b">{{ currentTextChunk }}</ng-template>
   <ng-template swalPortal="confirmButton">{{ currentTextChunk }}</ng-template>
   <ng-template swalPortal="denyButton">{{ currentTextChunk }}</ng-template>
   <ng-template swalPortal="cancelButton">{{ currentTextChunk }}</ng-template>
