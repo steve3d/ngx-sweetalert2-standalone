@@ -56,8 +56,7 @@ export class SwalPortalDirective implements OnInit, OnDestroy, OnChanges {
   }
 
   ngOnInit(): void {
-    // Must use ViewContainerRef to create embedded view
-    this.embeddedView = this.containerRef.createEmbeddedView(this.templateRef);
+
   }
 
   ngOnChanges(changes: SimpleChanges) {
@@ -98,6 +97,12 @@ export class SwalPortalDirective implements OnInit, OnDestroy, OnChanges {
 
   injectView(swal: SwalModule) {
     this.targetEl = this.getTarget(swal);
+
+    // create the embedded view only when didOpen, dom exists
+    if(!this.embeddedView) {
+      // Must use ViewContainerRef to create embedded view
+      this.embeddedView = this.containerRef.createEmbeddedView(this.templateRef);
+    }
 
     if (this.targetEl && this.embeddedView) {
       //=> Replace target's contents with our component
