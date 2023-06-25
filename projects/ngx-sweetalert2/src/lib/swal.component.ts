@@ -275,7 +275,10 @@ export class SwalComponent implements OnInit, OnChanges, OnDestroy {
         this.didRender.emit(e);
       },
       willClose: e => this.willClose.emit(e),
-      didClose: () => this.didClose.emit(),
+      didClose: () => {
+        this.didClose.emit();
+        this.portalDirectives?.forEach(d => d.detachView());
+      },
       didDestroy: () => this.didDestroy.emit()
     };
 

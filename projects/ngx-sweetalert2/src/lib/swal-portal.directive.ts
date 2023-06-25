@@ -68,11 +68,7 @@ export class SwalPortalDirective implements OnInit, OnDestroy, OnChanges {
   }
 
   ngOnDestroy() {
-    if (this.embeddedView) {
-      // remove and destroy embedded view manually
-      this.applicationRef.detachView(this.embeddedView);
-      this.embeddedView.destroy();
-    }
+    this.detachView();
   }
 
   get enforceOption(): SweetAlertOptions {
@@ -121,6 +117,15 @@ export class SwalPortalDirective implements OnInit, OnDestroy, OnChanges {
       }
 
       this.embeddedView.rootNodes.forEach(n => this.targetEl?.appendChild(n));
+    }
+  }
+
+  detachView() {
+    if (this.embeddedView) {
+      // remove and destroy embedded view manually
+      this.applicationRef.detachView(this.embeddedView);
+      this.embeddedView.destroy();
+      this.embeddedView = undefined;
     }
   }
 
